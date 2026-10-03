@@ -1,41 +1,25 @@
 # SO-101 Vision-Based Imitation Learning
 
-A low-cost real-world robotics project using a dual-camera SO-101 arm, LeRobot, and ACT imitation learning to study autonomous pick-and-place from human demonstrations.
+A real-world robotics project using a dual-camera SO-101 arm, Hugging Face LeRobot, and ACT imitation learning to study autonomous pick-and-place from human demonstrations.
 
-**Current status:** the real-robot baseline works. Increasing the dataset from 25 to 50 demonstrations produced much smoother and more reliable behavior than simply training the original 25 demonstrations longer.
+<p align="center">
+  <img src="media/leader_follower_system.jpg" width="760" alt="Assembled SO-101 leader and follower arms">
+</p>
 
-## Project Scope
+**Current result:** a policy trained on 50 demonstrations successfully performs the bottle-to-box task. In a small physical evaluation, the 50-demo / 10k model achieved **14/20 successes (70%)**, while the same model fine-tuned for another 10k updates achieved **16/20 (80%)**.
 
-This project builds on existing open-source hardware and software. I did **not** design the SO-101 platform, invent ACT, or write LeRobot.
+### Video comparison
 
-### Existing work used
+- [25 demos / 10k + 10k fine-tuning — failure example](media/25_demo_10k_plus_10k_failure.mp4)
+- [50 demos / 10k + 10k fine-tuning — successful example](media/50_demo_10k_plus_10k_success.mp4)
 
-- SO-101 leader/follower robot-arm platform
-- Hugging Face LeRobot
-- ACT (Action Chunking with Transformers) implementation in LeRobot
-- PyTorch
-- OpenCV
-- FFmpeg
-- Feetech STS3215 smart servos and existing low-level support
+## What I Built and What Already Existed
 
-### My contributions
+This project builds on the open-source **SO-101** hardware platform, **LeRobot**, and the existing **ACT** imitation-learning implementation. I did not design the original arm or invent ACT.
 
-I:
+My work was the system integration and experimentation: I 3D-printed and assembled the arms, configured and calibrated the servos, established teleoperation, integrated two cameras, designed a custom base-camera mount, collected the demonstrations, trained and evaluated the policies, and debugged the hardware/software stack.
 
-- 3D-printed, assembled, wired, configured, and calibrated the leader and follower arms;
-- assigned servo IDs and calibrated joint ranges;
-- established leader-to-follower teleoperation;
-- integrated two simultaneous cameras: a base-mounted camera and wrist-mounted camera;
-- designed and 3D-printed a custom base-camera mount in Onshape;
-- debugged USB hub, camera, COM-port, servo, encoding, dataset, and CUDA issues;
-- collected all real-world demonstrations used in these experiments;
-- trained and compared ACT policies across dataset sizes and training durations;
-- diagnosed a systematic rightward grasp bias in the 25-demonstration model;
-- tested whether additional training alone would correct that bias;
-- collected 25 additional, more varied demonstrations after it did not;
-- evaluated the 50-demonstration models across repeated physical trials.
-
-See [ATTRIBUTION.md](ATTRIBUTION.md) for a more explicit scope breakdown.
+A more explicit scope breakdown is in [ATTRIBUTION.md](ATTRIBUTION.md).
 
 ## System
 
@@ -44,41 +28,41 @@ See [ATTRIBUTION.md](ATTRIBUTION.md) for a more explicit scope breakdown.
 | Robot | SO-101 leader + follower |
 | Actuators | Feetech STS3215 smart servos |
 | Vision | Base camera + wrist camera |
-| Camera capture | 640×480 at 30 FPS |
-| Framework | LeRobot |
+| Capture | 640×480 at 30 FPS |
+| Framework | Hugging Face LeRobot |
 | Policy | ACT imitation learning |
 | Training GPU | NVIDIA GeForce RTX 4050 Laptop GPU |
 | Task | Pick up the white bottle and place it in the white box |
 
-### Pipeline
-
-Human teleoperation → dual-camera + joint-action recording → LeRobot dataset → ACT training on GPU → autonomous rollout → physical evaluation
+**Pipeline:** human teleoperation → dual-camera + joint-action recording → LeRobot dataset → ACT training → autonomous rollout → physical evaluation
 
 ## Experiment Progression
 
 ### 1. 25 demonstrations / 10k updates
 
-The first ACT policy generally moved toward the bottle but was shaky and showed a systematic rightward grasp miss.
+The first policy generally moved toward the bottle but was shaky and repeatedly missed to the right.
 
 ### 2. Same 25 demonstrations / +10k fine-tuning
 
-I loaded the 10k model weights and performed another 10k training updates using the **same dataset**. The rightward bias became worse rather than disappearing.
+I initialized from the 10k policy weights and trained for another 10k updates on the **same 25 demonstrations**. The rightward bias became worse rather than disappearing.
 
-> The second 10k run was initialized from the first model's weights with a fresh optimizer. It was not a continuous optimizer-state resume, so this repository describes it as **10k + 10k fine-tuning**.
+This suggested that the main issue was not simply insufficient optimization.
+
+> These “+10k” runs were initialized from the previous model weights with a fresh optimizer. They are therefore described as **10k + 10k fine-tuning**, not as a true continuous 20k optimizer-state resume.
 
 ### 3. 50 demonstrations / 10k updates
 
-I added 25 new demonstrations with more spatial variation and smoother, more deliberate grasp trajectories, then trained a fresh ACT policy on all 50 demonstrations.
+I collected 25 additional demonstrations with greater spatial variation and smoother, more deliberate trajectories, then trained a fresh policy on all 50 demonstrations.
 
-The resulting policy successfully completed the task and was visibly smoother and more accurate.
+The new model successfully completed the task and was visibly smoother and more accurate.
 
-### 4. 50 demonstrations / +10k fine-tuning
+### 4. Same 50 demonstrations / +10k fine-tuning
 
-I loaded the 50-demo / 10k model weights and trained for another 10k updates on the same 50 demonstrations.
+I then initialized from the 50-demo / 10k weights and performed another 10k updates on the same 50-demo dataset.
 
 ## Physical Evaluation
 
-Each placement category below contains 5 trials per checkpoint.
+Each placement category used 5 trials per checkpoint.
 
 | Test position | 50 demos / 10k | 50 demos / 10k + 10k fine-tuning |
 | --- | ---: | ---: |
@@ -88,41 +72,51 @@ Each placement category below contains 5 trials per checkpoint.
 | Big Swing | 4/5 | 4/5 |
 | **Overall** | **14/20 (70%)** | **16/20 (80%)** |
 
-These are small-sample engineering tests, not a statistically conclusive benchmark. The main qualitative result is that increasing dataset diversity from 25 to 50 demonstrations improved behavior substantially, while additional training on the original 25-demo dataset did not correct its systematic bias.
+These are small-sample engineering tests, not a statistically conclusive benchmark. Also, the added 25 demonstrations were both **more numerous and more varied**, so this experiment does not isolate dataset size from demonstration quality/diversity.
 
-Raw results are in [results.csv](results.csv).
+Raw results are in [results.csv](results.csv). The full development and experiment history is in [EXPERIMENTS.md](EXPERIMENTS.md).
 
-## Development Record
+## Custom Camera Integration
 
-The dated build and experiment journal is available in [EXPERIMENTS.md](EXPERIMENTS.md).
+The follower uses two visual viewpoints:
 
-The actual LeRobot commands used for teleoperation, recording, replay, training, fine-tuning, and rollout are documented in [real_robot/README.md](real_robot/README.md). Authentication credentials are intentionally excluded.
+- a fixed base camera for the overall workspace;
+- a wrist-mounted camera for close-up grasp information.
 
-## Custom CAD
+<p align="center">
+  <img src="media/base_camera_mount_installed.jpg" width="46%" alt="Custom base camera mount installed">
+  <img src="media/wrist_camera_closeup.jpg" width="46%" alt="Wrist-mounted camera">
+</p>
 
-My custom base-camera mount is documented under [hardware/camera_mount/](hardware/camera_mount/).
+I designed the base-camera mount in **Onshape** and 3D-printed it for the physical system. The printable STL, editable STEP file, and design notes are in [hardware/camera_mount/](hardware/camera_mount/).
+
+## Build Process
+
+<p align="center">
+  <img src="media/printed_parts_and_servos.jpg" width="58%" alt="Printed SO-101 parts and servos before assembly">
+</p>
+
+<p align="center">
+  <img src="media/builder_with_arms.jpg" width="42%" alt="Completed leader and follower arms after assembly">
+</p>
+
+The dated build log documents printing, assembly, calibration, camera integration, model training, debugging, and evaluation: [EXPERIMENTS.md](EXPERIMENTS.md).
+
+The sanitized LeRobot commands used for teleoperation, recording, replay, training, fine-tuning, and rollout are in [real_robot/README.md](real_robot/README.md).
+
+## Key Engineering Lessons
+
+The largest improvement came from expanding the demonstration distribution rather than continuing to optimize the original 25-demo dataset. In the pilot experiment, more training reinforced an existing positional bias; after expanding to 50 demonstrations, the policy became substantially more capable.
+
+The project also made clear how coupled a real robot-learning stack is: mechanical calibration, camera placement, USB reliability, demonstration quality, dataset coverage, GPU configuration, and control-loop timing all affect physical behavior.
 
 ## Next Research Step
 
-The planned next phase is to reproduce the same manipulation task in NVIDIA Isaac Lab and investigate:
+The planned next phase is to reproduce the task in **NVIDIA Isaac Lab** and investigate:
 
 > **Can simulation pretraining reduce the amount of real-world demonstration data required for a low-cost SO-101 arm?**
 
-## Project Status
-
-- [x] Print, assemble, wire, and calibrate leader/follower SO-101 arms
-- [x] Establish teleoperation
-- [x] Integrate base and wrist cameras
-- [x] Design and print custom base-camera mount
-- [x] Record 25-demo pilot dataset
-- [x] Train and evaluate pilot ACT policy
-- [x] Diagnose systematic grasp bias
-- [x] Expand dataset to 50 demonstrations
-- [x] Train successful autonomous pick-and-place policy
-- [x] Run repeated physical evaluation trials
-- [ ] Add selected build photos and comparison videos
-- [ ] Reproduce the task in Isaac Lab
-- [ ] Run sim-to-real experiments
+The planned comparison is real-only versus simulation-assisted learning evaluated on the same physical task. See [isaac_lab/README.md](isaac_lab/README.md).
 
 ## Acknowledgements
 
