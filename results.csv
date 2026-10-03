@@ -1,0 +1,9 @@
+model,training,test_position,successes,trials,success_rate
+50 demos,10k,Center,5,5,1.0
+50 demos,10k,Close Right,0,5,0.0
+50 demos,10k,Slight Left,5,5,1.0
+50 demos,10k,Big Swing,4,5,0.8
+50 demos,10k+10k fine-tuning,Center,5,5,1.0
+50 demos,10k+10k fine-tuning,Close Right,3,5,0.6
+50 demos,10k+10k fine-tuning,Slight Left,4,5,0.8
+50 demos,10k+10k fine-tuning,Big Swing,4,5,0.8
