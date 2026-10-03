@@ -94,9 +94,9 @@ Raw results are in [results.csv](results.csv).
 
 ## Development Record
 
-A dated build journal is available in [PROJECT_LOG.md](PROJECT_LOG.md).
+The dated build and experiment journal is available in [EXPERIMENTS.md](EXPERIMENTS.md).
 
-The actual LeRobot commands used for teleoperation, recording, replay, training, fine-tuning, and rollout are documented in [real_robot/COMMANDS.md](real_robot/COMMANDS.md). Authentication credentials are intentionally excluded.
+The actual LeRobot commands used for teleoperation, recording, replay, training, fine-tuning, and rollout are documented in [real_robot/README.md](real_robot/README.md). Authentication credentials are intentionally excluded.
 
 ## Custom CAD
 
