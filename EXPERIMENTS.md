@@ -2,6 +2,26 @@
 
 This log records the main build, debugging, training, and evaluation milestones for the real-robot SO-101 project.
 
+## Project time
+
+The first working real-robot baseline was developed over a **7-day sprint** from September 25 to October 2, 2026.
+
+Approximate **active development time: 22+ hours**, excluding unattended 3D-print runtime and other passive waiting time.
+
+| Work | Approx. active time |
+| --- | ---: |
+| Python refresher | 4.5 hr |
+| Custom camera-mount CAD | 1.5 hr |
+| Arm assembly | 3.5 hr |
+| Servo/software setup and calibration | 3 hr |
+| Camera integration/debugging | 4 hr |
+| Recording demonstrations | 0.5 hr |
+| Model training/debugging | 4 hr |
+| Physical evaluation | 1 hr |
+| **Total** | **22 hr** |
+
+The 22-hour figure is intentionally conservative and reflects hands-on work rather than unattended print or compute time.
+
 ## September 25, 2026 — Printing
 
 - Downloaded the SO-101 follower-arm 3D parts from GitHub.
@@ -11,6 +31,12 @@ This log records the main build, debugging, training, and evaluation milestones 
 - Traced the problem to the build-plate adhesion setup and removed the extra adhesion.
 - Restarted the print successfully.
 - Estimated print time: approximately **15 hours 14 minutes**.
+
+## September 26, 2026 — Custom camera mount
+
+- Designed the custom base-camera mount in **Onshape** for the external camera used in the dual-camera setup.
+- Iterated on fit, camera positioning, and attachment geometry before exporting the design for 3D printing.
+- Approximate active CAD/design time: **1.5 hours**.
 
 ## September 29–30, 2026 — Assembly and teleoperation
 
