@@ -1,17 +1,20 @@
 # Development and Experiment Log
 
+This log records the main build, debugging, training, and evaluation milestones for the real-robot SO-101 project.
+
 ## September 25, 2026 — Printing
 
 - Downloaded the SO-101 follower-arm 3D parts from GitHub.
 - Sliced the parts in Cura and transferred them to the printer.
 - Calibrated the printer using auxiliary and automatic calibration.
-- Initial printing repeatedly failed.
-- Fixed the issue by removing the extra build-plate adhesion.
-- Restarted a print lasting approximately **15 hours 14 minutes**.
+- The initial print repeatedly failed.
+- Traced the problem to the build-plate adhesion setup and removed the extra adhesion.
+- Restarted the print successfully.
+- Estimated print time: approximately **15 hours 14 minutes**.
 
 ## September 29–30, 2026 — Assembly and teleoperation
 
-Before software setup, I completed a **4.5-hour Python refresher course** over two days.
+Before software setup, I completed a **4.5-hour Python refresher course** over two days so I could better understand the robotics software stack.
 
 After the final motors arrived:
 
@@ -19,121 +22,110 @@ After the final motors arrived:
 - spent approximately **3.5 hours** on assembly;
 - connected the servo wiring;
 - assigned servo IDs to the corresponding joints;
+- configured local arm IDs;
 - calibrated minimum and maximum joint ranges to prevent overextension;
-- configured the local arm IDs;
 - established successful leader-to-follower teleoperation.
 
 Approximate servo/software setup time: **3 hours**.
 
 Local Windows port assignment during this build:
 
-- Leader arm: COM4
-- Follower arm: COM3
+- Leader arm: **COM4**
+- Follower arm: **COM3**
 
 These ports are machine-specific.
 
-## October 1, 2026 — Dual-camera integration
+## October 1, 2026 — Dual-camera integration and first dataset
 
 - Installed the custom CAD base-camera mount.
 - Added one base-mounted camera and one wrist-mounted camera.
-- Encountered USB hub and connection conflicts.
-- Debugged the system until both cameras could operate simultaneously.
+- Initially attempted to run the cameras through a USB hub.
+- Encountered repeated camera/USB connection conflicts.
+- Debugged the setup until both cameras could operate simultaneously.
 - Final production capture used both cameras at **640×480, 30 FPS**.
 - Approximate camera/debugging time: **4 hours**.
 
-I then recorded a small 5-episode test dataset, replayed a recorded episode, collected the 25-demo pilot dataset, and trained the first ACT model.
+I then:
 
----
+1. recorded a small 5-episode test dataset;
+2. replayed a recorded episode to verify the pipeline;
+3. collected the 25-demonstration pilot dataset;
+4. trained the first ACT model for 10,000 updates.
 
-# Real-Robot Experiments
+## October 2, 2026 — Failure analysis, dataset expansion, and evaluation
 
-## Task
+This was the main iteration day for the project.
 
-**Pick up the white bottle and place it in the white box.**
+### 1. Evaluated the 25-demo / 10k policy
 
-## Hardware and sensing
+The arm generally moved toward the bottle, but the motion was shaky and the gripper repeatedly missed to the **right**, even when the bottle position changed.
 
-- SO-101 follower arm
-- SO-101 leader arm for teleoperation
-- Base-mounted camera
-- Wrist-mounted camera
-- 640×480 at 30 FPS for both camera streams
+That made the error look systematic rather than like a single bad rollout.
 
-## Experiment 1 — 25 demonstrations / 10k
+### 2. Tested the “undertrained” hypothesis
 
-The first dataset contained 25 teleoperated demonstrations.
+I initialized from the 25-demo / 10k policy weights and performed another 10,000 updates on the **same 25 demonstrations**.
 
-Observed behavior:
+The rightward bias became worse rather than improving, and the motion remained shaky.
 
-- the arm moved generally toward the bottle;
-- motion was visibly shaky;
-- the grasp consistently missed to the right.
+That result pushed me away from the idea that the policy simply needed more optimization.
 
-The model had learned the overall direction of the task but showed a systematic positional bias.
+### 3. Expanded the dataset from 25 to 50 demonstrations
 
-## Experiment 2 — same 25 demonstrations / +10k fine-tuning
+I collected 25 additional teleoperated episodes with:
 
-I initialized from the 25-demo / 10k policy weights and performed another 10,000 updates using the same 25-demo dataset.
+- more variation in bottle and box placement;
+- smoother trajectories;
+- more deliberate grasp alignment.
 
-Observed behavior:
+The final local dataset contained 50 episodes even though the original dataset/repository name still referenced “pilot-25.”
 
-- the rightward miss became worse;
-- shakiness remained.
+### 4. Trained a fresh 50-demo model
 
-The failure was not corrected by simply optimizing the same limited dataset longer.
+I trained a new ACT policy from scratch on all 50 demonstrations for 10,000 updates.
 
-This run used the previous policy weights but a fresh optimizer, so it is described as **10k + 10k fine-tuning**, not a true continuous 20k optimizer-state resume.
+This model successfully completed the autonomous bottle-to-box task and was noticeably smoother and more accurate than the 25-demo model.
 
-## Experiment 3 — 50 demonstrations / 10k
-
-I added 25 new demonstrations with greater spatial variation and careful, smooth grasp trajectories, bringing the dataset to 50 episodes.
-
-I then trained a fresh ACT model for 10,000 updates.
-
-Observed behavior:
-
-- successful autonomous pick-and-place;
-- less shaky motion;
-- more accurate grasping.
-
-### Physical evaluation
-
-| Position | Success |
-| --- | ---: |
-| Center | 5/5 |
-| Close Right | 0/5 |
-| Slight Left | 5/5 |
-| Big Swing | 4/5 |
-| **Overall** | **14/20 (70%)** |
-
-## Experiment 4 — same 50 demonstrations / +10k fine-tuning
+### 5. Fine-tuned the 50-demo model for another 10k updates
 
 I initialized from the 50-demo / 10k policy weights and performed another 10,000 updates on the same dataset.
 
-### Physical evaluation
+As with the 25-demo fine-tuning run, this used the previous policy weights with a **fresh optimizer**, so it is documented as **10k + 10k fine-tuning**, not a true continuous 20k optimizer-state resume.
 
-| Position | Success |
-| --- | ---: |
-| Center | 5/5 |
-| Close Right | 3/5 |
-| Slight Left | 4/5 |
-| Big Swing | 4/5 |
-| **Overall** | **16/20 (80%)** |
+### 6. Ran standardized physical trials
 
-Again, this was initialized from pretrained weights with a fresh optimizer rather than a true optimizer-state resume.
+I tested the 50-demo / 10k and 50-demo / 10k + 10k checkpoints under the same four placement categories.
 
-## Rollout observations
+| Position | 50 demos / 10k | 50 demos / 10k + 10k fine-tuning |
+| --- | ---: | ---: |
+| Center | 5/5 | 5/5 |
+| Close Right | 0/5 | 3/5 |
+| Slight Left | 5/5 | 4/5 |
+| Big Swing | 4/5 | 4/5 |
+| **Overall** | **14/20 (70%)** | **16/20 (80%)** |
 
-- Target control-loop rate: 30 Hz.
-- One observed rollout averaged roughly 27.9 Hz with occasional timing spikes.
-- After successful placement, the policy could continue making movements until the rollout was manually stopped because no explicit task-success termination condition was implemented.
+### 7. Other debugging during the training/rollout cycle
 
-## Current engineering conclusion
+During this stage I also diagnosed a major performance issue in the training environment: PyTorch had initially been installed as a CPU-only build. After switching to a CUDA-enabled build and confirming the RTX 4050 Laptop GPU was available, ACT training became practical for repeated experiments.
 
-Increasing the diversity of the real demonstration dataset from 25 to 50 episodes produced a much larger improvement than continuing to optimize the original 25-demo dataset.
+During rollout, I also observed that:
 
-The current experiments do **not** isolate demonstration count from demonstration quality/diversity, because the added 25 episodes were also intentionally more varied and carefully executed.
+- the control loop could occasionally experience timing spikes;
+- after a successful placement, the policy could continue moving because the rollout had no explicit task-completion termination condition.
+
+### Video examples
+
+- [25 demos / 10k + 10k fine-tuning — failure example](media/25_demo_10k_plus_10k_failure.mp4)
+- [50 demos / 10k + 10k fine-tuning — successful example](media/50_demo_10k_plus_10k_success.mp4)
+
+## Interpretation
+
+The current results support a practical engineering conclusion: **increasing the coverage and diversity of the demonstration dataset mattered more than simply training the original 25-demo dataset longer.**
+
+The results do **not** isolate dataset size from demonstration quality/diversity, because the added 25 episodes were also intentionally more varied and carefully executed.
+
+Likewise, the 20-trial evaluations are useful engineering measurements but are too small to treat as a statistically conclusive benchmark.
 
 ## Next experiment
 
-Reproduce the task in NVIDIA Isaac Lab and compare real-only versus simulation-assisted learning under the same real-world evaluation protocol.
+Reproduce the same task in NVIDIA Isaac Lab and compare real-only versus simulation-assisted learning under the same physical evaluation protocol.
