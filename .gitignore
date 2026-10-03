@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local environments / secrets
+.env
+*.token
+*token*.txt
+
+# LeRobot / training outputs
+outputs/
+checkpoints/
+wandb/
+
+# Large datasets / caches
+data/
+datasets/
+.cache/
+*.parquet
+*.safetensors
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
