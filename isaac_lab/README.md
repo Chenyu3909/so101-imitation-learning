@@ -1,19 +1,28 @@
-# Isaac Lab
+# Isaac Lab — Planned Sim-to-Real Extension
 
-This phase has not been completed yet.
+This folder is reserved for the next phase of the project.
 
-Planned research question:
+## Research question
 
-> Can simulation pretraining reduce the amount of real-world demonstration data required for a low-cost SO-101 arm?
+> **Can simulation pretraining reduce the amount of real-world demonstration data required for a low-cost SO-101 arm?**
 
-Planned work:
+## Planned comparison
 
-- import/recreate the SO-101 in Isaac Lab;
+The goal is to reproduce the same bottle-to-box task in NVIDIA Isaac Lab and compare:
+
+- real-only policies trained from physical demonstrations;
+- simulation-assisted policies pretrained in simulation and then fine-tuned with real demonstrations.
+
+Both would be evaluated using the same physical placement protocol used for the current real-robot baseline.
+
+## Planned work
+
+- reproduce/import the SO-101 in Isaac Lab;
 - match the physical pick-and-place workspace;
-- build a bottle-to-box manipulation task;
+- create the bottle-to-box manipulation task;
 - introduce controlled simulation variation/domain randomization;
-- train or pretrain a policy in simulation;
-- fine-tune using real demonstrations;
-- compare real-only vs. simulation-assisted policies on the same physical evaluation set.
+- pretrain in simulation;
+- fine-tune with different amounts of real demonstration data;
+- compare real-world success rates.
 
-This folder should stay clearly labeled as future/in-progress work until results exist.
+No simulation results are claimed in the repository yet.
