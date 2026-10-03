@@ -8,6 +8,8 @@ A real-world robotics project using a dual-camera SO-101 arm, Hugging Face LeRob
 
 **Current result:** a policy trained on 50 demonstrations successfully performs the bottle-to-box task. In a small physical evaluation, the 50-demo / 10k model achieved **14/20 successes (70%)**, while the same model fine-tuned for another 10k updates achieved **16/20 (80%)**.
 
+**Project duration:** 7-day development sprint · **22+ hours of active work** across CAD, assembly, calibration, camera integration, data collection, model training/debugging, and physical evaluation. Unattended 3D-print and compute time are excluded.
+
 ### Video comparison
 
 - [25 demos / 10k + 10k fine-tuning — failure example](media/25_demo_10k_plus_10k_failure.mp4)
